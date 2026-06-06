@@ -71,7 +71,7 @@
   <button data-v="essay"><span class="ic">✎</span>Essay</button>
   <button data-v="timer"><span class="ic">⏱</span>Timer</button>
   <button data-v="track"><span class="ic">▲</span>Track</button>
-  <button data-v="moti"><span class="ic">💛</span>Rem</button>
+  <button data-v="rem"><span class="ic">💛</span>Rem</button>
   <button data-v="info"><span class="ic">☰</span>Guide</button>
 </nav>
 
@@ -222,13 +222,13 @@
     <div id="resList"></div>
     <p class="note">Plan, vocab, and quiz progress all save automatically on this device.</p>
   </section>
-    <!-- MOTIVATION VIEW — rebuilt -->
-  <section class="view" id="v-moti">
+    <!-- remVATION VIEW — rebuilt -->
+  <section class="view" id="v-rem">
     <canvas class="stars-canvas" id="starsCanvas"></canvas>
 
     <!-- Greeting -->
-    <div class="moti-greeting">
-      <div class="gday" id="motiDay">Good morning, Moma</div>
+    <div class="rem-greeting">
+      <div class="gday" id="remDay">Good morning, Moma</div>
       <div class="gmsg">Every word you learn today<br>is a step closer to <em>us</em>.</div>
       <div class="gsub">Narna is on the other side of this exam. Keep going. 💛</div>
     </div>
@@ -250,7 +250,7 @@
 
     <!-- Journey map -->
     <div class="journey-map">
-      <div class="moti-sec-h">✈️ Your journey to Narna</div>
+      <div class="rem-sec-h">✈️ Your journey to Narna</div>
       <div class="journey-track">
         <div class="journey-header">
           <div class="journey-title" id="journeyTitle">The path</div>
@@ -266,8 +266,8 @@
       </div>
     </div>
 
-    <!-- Short motivations -->
-    <div class="moti-sec-h">💌 From Narna</div>
+    <!-- Short remvations -->
+    <div class="rem-sec-h">💌 From Narna</div>
     <div class="quote-stack" id="quoteStack">
       <!-- Rendered by JS -->
     </div>
@@ -347,7 +347,7 @@ const DECKS = {
 ["Disabuse","verb","To free someone from a misconception.","Let me disabuse you of that false idea.","correct · undeceive · enlighten"],
 ["Discordant","adj","Disagreeing; harsh-sounding.","Discordant opinions split the committee.","clashing · jarring · conflicting"],
 ["Disparage","verb","To regard or speak of as unimportant.","He disparaged the work without reading it.","belittle · denigrate · demean"],
-["Dissemble","verb","To conceal one's true motives or feelings.","She dissembled her disappointment with a grin.","disguise · feign · mask"],
+["Dissemble","verb","To conceal one's true remves or feelings.","She dissembled her disappointment with a grin.","disguise · feign · mask"],
 ["Dogmatic","adj","Asserting opinions as if they were facts.","His dogmatic tone shut down all debate.","opinionated · rigid · assertive"],
 ["Ebullient","adj","Cheerful and full of energy.","The ebullient crowd cheered every play.","exuberant · buoyant · elated"],
 ["Eclectic","adj","Drawing from a broad range of sources.","Her eclectic taste mixed jazz with techno.","varied · diverse · wide-ranging"],
@@ -413,7 +413,7 @@ const DECKS = {
 ["Perfidious","adj","Deceitful and untrustworthy.","His perfidious betrayal stunned his allies.","treacherous · disloyal · faithless"],
 ["Pernicious","adj","Harmful, often in a gradual way.","Misinformation has a pernicious influence.","harmful · insidious · destructive"],
 ["Perspicacious","adj","Having keen insight.","A perspicacious editor spotted the flaw at once.","perceptive · shrewd · astute"],
-["Phlegmatic","adj","Calm and unemotional.","His phlegmatic manner steadied the team.","stolid · unflappable · composed"],
+["Phlegmatic","adj","Calm and uneremonal.","His phlegmatic manner steadied the team.","stolid · unflappable · composed"],
 ["Placate","verb","To calm or appease.","They placated the crowd with free tickets.","appease · pacify · mollify"],
 ["Plethora","noun","An excess; a large amount.","A plethora of options overwhelmed buyers.","excess · abundance · surplus"],
 ["Pragmatic","adj","Practical rather than idealistic.","A pragmatic leader, she focused on results.","practical · realistic · sensible"],
@@ -603,7 +603,7 @@ const DECKS_EXTRA = {
 ["Hegemony","noun","Dominance of one group over others.","The empire's hegemony spanned the sea.","dominance · supremacy · control"],
 ["Iconoclastic","adj","Attacking cherished beliefs.","Her iconoclastic theory upset the field.","rebellious · heretical · subversive"],
 ["Idiosyncrasy","noun","A peculiar individual trait.","Tapping his pen was his idiosyncrasy.","quirk · eccentricity · peculiarity"],
-["Impassive","adj","Showing no emotion.","His impassive face hid his fear.","expressionless · stoic · unmoved"],
+["Impassive","adj","Showing no eremon.","His impassive face hid his fear.","expressionless · stoic · unmoved"],
 ["Impetuous","adj","Acting quickly without thought.","An impetuous decision he later regretted.","rash · impulsive · hasty"],
 ["Implacable","adj","Unable to be appeased.","An implacable foe, she never forgave.","relentless · unyielding · inexorable"],
 ["Inane","adj","Silly; lacking sense.","The chatter was utterly inane.","silly · vacuous · fatuous"],
@@ -1139,7 +1139,7 @@ document.getElementById("btnImport").onclick = ()=>{
 
   <script src="data.js"></script>
   <script src="app.js"></script>
-  <script src="moti.js"></script>
+  <script src="rem.js"></script>
   <!-- milestone unlock banner -->
 <div class="milestone-unlock" id="milestoneUnlock"></div>
 </body>
