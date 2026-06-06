@@ -283,7 +283,7 @@ function checkNotif(){
       try{
         new Notification('GRE Sprint 📚',{
           body:"Hey Moma! Time for today's vocab — Narna is counting on you 💛",
-          icon:'/icons/icon-192.png'
+          icon:'icons/icon-192.png'
         });
       }catch(e){}
     }

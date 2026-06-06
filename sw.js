@@ -1,17 +1,23 @@
 /* GRE Sprint — sw.js
-   If hosted in a subfolder (e.g. /gre-sprint/), change BASE below to match. */
-const BASE  = '';   // e.g. '/gre-sprint' — no trailing slash
-const CACHE = 'gre-sprint-v1';
+   Caches relative to wherever this SW is served from, so it works at
+   a domain root OR in a GitHub Pages subfolder with no edits needed. */
+
+const CACHE = 'gre-sprint-v2';
+
+// Derive base directory from the SW's own URL.
+// e.g. https://user.github.io/gre-sprint/sw.js -> /gre-sprint/
+const BASE = self.location.pathname.replace(/sw\.js$/, '');
+
 const ASSETS = [
-  BASE + '/',
-  BASE + '/index.html',
-  BASE + '/style.css',
-  BASE + '/data.js',
-  BASE + '/moti.js',
-  BASE + '/app.js',
-  BASE + '/manifest.json',
-  BASE + '/icons/icon-192.png',
-  BASE + '/icons/icon-512.png'
+  BASE,
+  BASE + 'index.html',
+  BASE + 'style.css',
+  BASE + 'data.js',
+  BASE + 'app.js',
+  BASE + 'moti.js',
+  BASE + 'manifest.json',
+  BASE + 'icons/icon-192.png',
+  BASE + 'icons/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -19,6 +25,7 @@ self.addEventListener('install', e => {
     caches.open(CACHE)
       .then(c => c.addAll(ASSETS))
       .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting())
   );
 });
 
@@ -45,7 +52,7 @@ self.addEventListener('fetch', e => {
         const clone = res.clone();
         caches.open(CACHE).then(c => c.put(e.request, clone));
         return res;
-      })
+      }).catch(() => cached)
     )
   );
 });

@@ -2,16 +2,16 @@
   "name": "GRE Sprint · 30-Day Prep",
   "short_name": "GRE Sprint",
   "description": "A complete 30-day GRE prep plan with flashcards, quizzes, essay guide and real-time progress tracking.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
-  "background_color": "#f4ede0",
-  "theme_color": "#b8841d",
+  "background_color": "#0d0b14",
+  "theme_color": "#0d0b14",
   "orientation": "portrait",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
   ],
   "categories": ["education"],
   "lang": "en",
-  "scope": "/"
+  "scope": "./"
 }
