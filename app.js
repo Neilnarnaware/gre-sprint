@@ -1,59 +1,65 @@
 /* GRE Sprint — app.js */
 'use strict';
 
-// ---------- CONFIG ----------
+// ---------- FIREBASE CONFIG ----------
+// Web API key is safe to ship in a client app; security comes from DB rules.
+// If your Realtime Database URL differs, change databaseURL below to match
+// the one shown in Firebase Console → Realtime Database.
+const FIREBASE = {
+  apiKey: "AIzaSyAWqpj4Vj4Gf2lmNHYfEPF1AC7memahMXU",
+  authDomain: "gre-sprint.firebaseapp.com",
+  projectId: "gre-sprint",
+  databaseURL: "https://gre-sprint-default-rtdb.firebaseio.com"
+};
+
+// ---------- ROOM (shared sync code) ----------
 const CONFIG_KEY = 'greSprintConfig';
-let cfg = { binId: '', apiKey: '' };
+let cfg = { room: '' };
 
 function loadCfg(){
   try { cfg = JSON.parse(localStorage.getItem(CONFIG_KEY) || '{}'); } catch(e){}
-  cfg.binId  = cfg.binId  || '';
-  cfg.apiKey = cfg.apiKey || '';
+  cfg.room = cfg.room || '';
 }
 function saveCfg(){ localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg)); }
-function hasSync(){ return !!(cfg.binId && cfg.apiKey); }
+function hasSync(){ return !!cfg.room; }
 
-// ---------- JSONBIN SYNC ----------
-// JSONBin.io free tier: 10k reads/month, 1k writes/month — plenty for personal use
-const BIN_URL = id => `https://api.jsonbin.io/v3/b/${id}`;
+// Firebase REST endpoint for this room's data node
+function roomUrl(){
+  return `${FIREBASE.databaseURL}/rooms/${encodeURIComponent(cfg.room)}.json`;
+}
 
+// ---------- FIREBASE SYNC (REST) ----------
 async function remoteRead(){
   if(!hasSync()) return null;
   try{
-    const r = await fetch(BIN_URL(cfg.binId), {
-      headers: { 'X-Master-Key': cfg.apiKey, 'X-Bin-Meta': 'false' }
-    });
+    const r = await fetch(roomUrl(), { cache: 'no-store' });
     if(!r.ok) return null;
-    return await r.json();
+    return await r.json();   // null if node doesn't exist yet
   } catch(e){ return null; }
 }
 
 async function remoteWrite(data){
   if(!hasSync()) return false;
   try{
-    const r = await fetch(BIN_URL(cfg.binId), {
+    const r = await fetch(roomUrl(), {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': cfg.apiKey },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return r.ok;
   } catch(e){ return false; }
 }
 
-async function createBin(apiKey){
-  const r = await fetch('https://api.jsonbin.io/v3/b', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Master-Key': apiKey,
-      'X-Bin-Name': 'GRE Sprint',
-      'X-Collection-Id': ''
-    },
-    body: JSON.stringify(blankState())
-  });
-  if(!r.ok) throw new Error('Failed to create bin: ' + r.status);
-  const j = await r.json();
-  return j.metadata.id;
+// First-time write to claim/create a room node
+async function createRoom(room){
+  cfg = { room };
+  const existing = await remoteRead();       // does this room already hold data?
+  if(existing && existing.lastSaved){
+    return 'joined';                          // someone (her) already set it up
+  }
+  const ok = await remoteWrite(blankState());
+  if(!ok) throw new Error('Could not reach Firebase');
+  return 'created';
 }
 
 // ---------- STATE ----------
@@ -93,14 +99,14 @@ let saveTimer = null;
 async function save(){
   S.lastSaved = Date.now();
   saveLocal();
-  // Debounce remote writes — 2s after last change
+  // Debounce remote writes — 1s after last change
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     if(!hasSync()) return;
     setSyncStatus('syncing');
     const ok = await remoteWrite(S);
     setSyncStatus(ok ? 'ok' : 'err');
-  }, 2000);
+  }, 1000);
 }
 
 function setSyncStatus(st){
@@ -108,8 +114,40 @@ function setSyncStatus(st){
   const pill = document.getElementById('syncPill');
   if(!pill) return;
   pill.className = 'sync-pill ' + st;
-  const labels = { idle:'—', syncing:'Syncing…', ok:'Synced', err:'Offline · saved locally' };
+  const labels = { idle:'—', syncing:'Syncing…', ok:'Synced live', err:'Offline · saved locally' };
   pill.querySelector('.label').textContent = labels[st] || st;
+}
+
+// Show the current room code on the Track tab and wire the change button
+function refreshRoomDisplay(){
+  const disp = document.getElementById('roomDisplay');
+  if(disp){
+    disp.textContent = hasSync() ? ('Code: ' + cfg.room) : 'Not connected — running offline';
+    disp.classList.toggle('connected', hasSync());
+  }
+  const btn = document.getElementById('btnChangeRoom');
+  if(btn && !btn._wired){
+    btn._wired = true;
+    btn.onclick = async () => {
+      const next = prompt('Enter a shared sync code (same on both phones):', cfg.room || '');
+      if(next === null) return;
+      const room = next.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
+      if(room.length < 4){ toast('Code must be at least 4 characters'); return; }
+      try{
+        setSyncStatus('syncing');
+        await createRoom(room);
+        cfg = { room }; saveCfg();
+        const remote = await remoteRead();
+        if(remote && remote.lastSaved){ S = Object.assign(blankState(), remote); saveLocal(); }
+        else { await remoteWrite(S); }
+        renderAll();
+        if(typeof renderJourneyMap === 'function') renderJourneyMap();
+        refreshRoomDisplay();
+        setSyncStatus('ok');
+        toast('Now syncing on code: ' + room);
+      }catch(e){ setSyncStatus('err'); toast('Could not connect to Firebase'); }
+    };
+  }
 }
 
 // ---------- SETUP SCREEN ----------
@@ -118,37 +156,22 @@ function showSetup(onDone){
   el.style.display = 'flex';
 
   document.getElementById('btnSetupSave').onclick = async () => {
-    const key = document.getElementById('inpApiKey').value.trim();
-    if(!key){ toast('Paste your JSONBin Master Key first'); return; }
+    const room = document.getElementById('inpRoom').value.trim().toLowerCase().replace(/[^a-z0-9-]/g,'');
+    if(room.length < 4){ toast('Pick a code at least 4 characters'); return; }
 
-    document.getElementById('btnSetupSave').textContent = 'Creating…';
+    const btn = document.getElementById('btnSetupSave');
+    btn.textContent = 'Connecting…';
     try{
-      const binId = await createBin(key);
-      cfg = { binId, apiKey: key };
+      const result = await createRoom(room);
+      cfg = { room };
       saveCfg();
       el.style.display = 'none';
-      toast('Sync set up! Share Bin ID with your girlfriend.');
+      toast(result === 'joined' ? 'Joined! Loading progress…' : 'Sync on! Share code: ' + room);
       onDone();
     } catch(e){
-      toast('Could not connect — check your API key');
-      document.getElementById('btnSetupSave').textContent = 'Connect & Create Bin';
+      toast('Could not reach Firebase — check the database URL');
+      btn.textContent = 'Start syncing →';
     }
-  };
-
-  document.getElementById('btnSetupExisting').onclick = () => {
-    document.getElementById('setupNew').style.display = 'none';
-    document.getElementById('setupExisting').style.display = 'block';
-  };
-
-  document.getElementById('btnSetupJoin').onclick = async () => {
-    const key   = document.getElementById('inpApiKey2').value.trim();
-    const binId = document.getElementById('inpBinId').value.trim();
-    if(!key || !binId){ toast('Fill in both fields'); return; }
-    cfg = { binId, apiKey: key };
-    saveCfg();
-    el.style.display = 'none';
-    toast('Connected! Loading her progress…');
-    onDone();
   };
 
   document.getElementById('btnSetupSkip').onclick = () => {
@@ -467,16 +490,31 @@ document.getElementById('resetAll').onclick = () => {
   }
 };
 
-// ---------- LIVE REFRESH (poll remote every 60s when you're watching) ----------
+// ---------- LIVE REFRESH (poll Firebase while app is open) ----------
 setInterval(async () => {
   if(!hasSync() || document.hidden) return;
   const remote = await remoteRead();
   if(remote && remote.lastSaved && remote.lastSaved > (S.lastSaved||0)){
     S = Object.assign(blankState(), remote);
     saveLocal(); renderAll();
+    if(typeof renderJourneyMap === 'function') renderJourneyMap();
+    if(typeof renderWordReminder === 'function') renderWordReminder();
+    setSyncStatus('ok');
+    toast('Updated ✓');
+  }
+}, 15000);
+
+// Also refresh the moment the app regains focus (e.g. you reopen to check on her)
+document.addEventListener('visibilitychange', async () => {
+  if(document.hidden || !hasSync()) return;
+  const remote = await remoteRead();
+  if(remote && remote.lastSaved && remote.lastSaved > (S.lastSaved||0)){
+    S = Object.assign(blankState(), remote);
+    saveLocal(); renderAll();
+    if(typeof renderJourneyMap === 'function') renderJourneyMap();
     setSyncStatus('ok');
   }
-}, 60000);
+});
 
 // ---------- RENDER ALL ----------
 function renderAll(){
@@ -504,11 +542,13 @@ if('serviceWorker' in navigator){
     showSetup(async () => {
       await loadState();
       renderAll();
+      refreshRoomDisplay();
       if(typeof initMotivation === 'function') initMotivation();
     });
   } else {
     await loadState();
     renderAll();
+    refreshRoomDisplay();
     if(typeof initMotivation === 'function') initMotivation();
   }
 })();

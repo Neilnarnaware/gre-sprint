@@ -2,7 +2,7 @@
    Caches relative to wherever this SW is served from, so it works at
    a domain root OR in a GitHub Pages subfolder with no edits needed. */
 
-const CACHE = 'gre-sprint-v2';
+const CACHE = 'gre-sprint-v3';
 
 // Derive base directory from the SW's own URL.
 // e.g. https://user.github.io/gre-sprint/sw.js -> /gre-sprint/
@@ -38,10 +38,11 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  if (e.request.url.includes('jsonbin.io')) {
+  // Never cache the sync API (Firebase) — always go to network
+  if (e.request.url.includes('firebaseio.com') || e.request.url.includes('firebasedatabase.app')) {
     e.respondWith(
       fetch(e.request).catch(() =>
-        new Response('{"offline":true}', { headers: { 'Content-Type': 'application/json' } })
+        new Response('null', { headers: { 'Content-Type': 'application/json' } })
       )
     );
     return;

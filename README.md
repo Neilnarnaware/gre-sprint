@@ -44,37 +44,56 @@ That's it — the app is live in 1–2 minutes.
 
 ## Set up real-time sync (so you see her progress live)
 
-The app uses [JSONBin.io](https://jsonbin.io) as a free, lightweight data store. No server setup required.
+The app uses **Firebase Realtime Database** — updates push between phones live, usually within seconds. The Firebase config is already baked into `app.js`.
 
-### Step 1 — Get a free JSONBin API key
+### Step 1 — Create the Realtime Database (one time)
 
-1. Go to [jsonbin.io](https://jsonbin.io) and sign up (free)
-2. Go to **Account → API Keys**
-3. Copy your **Master Key** (starts with `$2a$10b…`)
+1. Go to [console.firebase.google.com](https://console.firebase.google.com) and open the **gre-sprint** project
+2. In the left menu: **Build → Realtime Database → Create Database**
+3. Choose a location (United States is fine), then start in **test mode**
+4. At the top you'll see your database URL, e.g. `https://gre-sprint-default-rtdb.firebaseio.com`
+5. If that URL is different from the one in `app.js` (the `databaseURL` field near the top), update that one line to match, then re-upload `app.js`
 
-### Step 2 — She sets up the app (first time)
+### Step 2 — Lock it down with security rules
+
+In **Realtime Database → Rules**, paste this and Publish. It keeps the data under a `rooms` node and limits size so nobody can abuse it:
+
+```json
+{
+  "rules": {
+    "rooms": {
+      "$room": {
+        ".read": true,
+        ".write": true,
+        ".validate": "newData.hasChildren(['lastSaved'])"
+      }
+    }
+  }
+}
+```
+
+This is fine for two trusted people sharing a private, hard-to-guess code. Anyone who knew your exact code could read the data, so make the code long and non-obvious (e.g. `moma-narna-x7k2`). If you later want it truly private, enable Firebase Anonymous Auth and change `.read`/`.write` to `"auth != null"`.
+
+### Step 3 — She sets up the app (first time)
 
 1. She opens the app URL on her Android
-2. On first launch, the setup screen appears automatically
-3. She taps **Add to Home Screen** in her browser menu (Chrome → three dots → Add to Home Screen) — it installs like a native app
-4. She pastes the JSONBin Master Key and taps **Connect & Create Bin**
-5. The app creates a private data bin and shows her the **Bin ID** — she sends it to you
+2. On first launch, the setup screen appears
+3. She taps **Add to Home Screen** (Chrome → three dots) — installs like a native app
+4. She enters a **shared code** you both agreed on (e.g. `moma-narna-x7k2`) and taps **Start syncing**
 
-### Step 3 — You connect on your iPhone
+### Step 4 — You connect on your iPhone
 
-1. Open the same URL on your iPhone
-2. Tap the setup screen → **Already have a Bin ID? Join existing**
-3. Enter the Master Key and the Bin ID she sent
-4. Tap **Join & Sync**
-5. In Safari: tap the **Share button → Add to Home Screen** — installs as an app
+1. Open the same URL on your iPhone in **Safari**
+2. Enter the **exact same code**
+3. Tap the **Share button → Add to Home Screen**
 
-Now both phones read and write the same data. Her progress appears on your Track tab within 60 seconds of any change she makes.
+Done. Her flashcards, plan days, quiz stats and journey-map progress now appear on your Track tab automatically — within ~15 seconds of any change, or instantly when you reopen the app. You can change the code anytime on the Track tab → **Change sync code**.
 
 ---
 
-## If you want to use different JSONBin accounts
+## Why is the Firebase API key in the code?
 
-The Master Key is private — only use it on devices you trust. If you want separate read-only access for yourself, JSONBin's paid tier supports Access Keys, but the free Master Key shared between two trusted people (you and her) works fine.
+That's normal and safe for web apps. The Firebase web API key only identifies your project; it is not a secret. Real security comes from the database rules above. Google documents this explicitly.
 
 ---
 
@@ -85,7 +104,7 @@ gre-pwa/
 ├── index.html       ← Main app shell (all UI)
 ├── style.css        ← All styles + PWA additions
 ├── data.js          ← 285 vocab words, 69 quiz Qs, 30-day plan, essay data
-├── app.js           ← All logic + JSONBin sync + service worker registration
+├── app.js           ← All logic + Firebase sync + service worker registration
 ├── sw.js            ← Service worker (offline support)
 ├── manifest.json    ← PWA manifest (install prompt, icons, theme)
 ├── .nojekyll        ← Tells GitHub Pages not to process files with Jekyll

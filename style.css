@@ -175,6 +175,8 @@
   .share-actions .prime{background:var(--gold);color:#fff;border-color:var(--gold)}
   .code-area{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:11px;padding:11px;font-family:'Spline Sans Mono',monospace;font-size:11px;background:var(--paper);color:var(--ink);resize:vertical;min-height:64px;display:none}
   .code-area.show{display:block}
+  .room-display{margin-top:11px;padding:11px 13px;border-radius:11px;background:var(--paper-2);border:1px solid var(--line);font-family:'Spline Sans Mono',monospace;font-size:13px;color:var(--ink-soft);font-weight:600;letter-spacing:.03em}
+  .room-display.connected{color:var(--moss);border-color:var(--moss)}
 
 /* PWA safe-area / notch support */
 header { padding-top: max(24px, env(safe-area-inset-top) + 10px); }
